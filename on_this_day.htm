@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+</style>
+<head>
+  <title>Today's Event Lookup</title>
+</head>
+<body>
+  <h2>On this day in philosophy ...</h2>
+  <div id="eventDisplay">Loading...</div>
+
+  <script>
+    // Replace with your own Sheet ID and sheet/tab name
+    const jsonUrl = 'https://opensheet.elk.sh/1Y_xADQbbgAjFS_T7yPMkrXxn_VsLeiU-btoUv_stEuU/Sheet1';
+
+    function getToday() {
+      const today = new Date();
+      return {
+        day: today.getDate(),
+        month: today.getMonth() + 1
+      };
+    }
+
+    function matchToday(events) {
+      const { day, month } = getToday();
+      const matches = events.filter(e => e.day === day && e.month === month);
+      if (matches.length === 0) return null;
+      const pick = matches[Math.floor(Math.random() * matches.length)];
+      return `On this day in ${pick.year}, ${pick.event}`;
+    }
+
+    async function loadEvent() {
+      try {
+        const response = await fetch(jsonUrl);
+        const data = await response.json();
+
+        // Convert rows to usable format
+        const events = data.map(row => ({
+          day: parseInt(row.day),
+          month: parseInt(row.month),
+          year: row.year.trim(),
+          event: row.event.trim()
+        })).filter(e =>
+          !isNaN(e.day) &&
+          !isNaN(e.month) &&
+          e.year &&
+          e.event
+        );
+
+        const result = matchToday(events);
+        document.getElementById('eventDisplay').textContent = result || 'No event today.';
+      } catch (error) {
+        console.error('Fetch error:', error);
+        document.getElementById('eventDisplay').textContent = 'Failed to load events.';
+      }
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>
